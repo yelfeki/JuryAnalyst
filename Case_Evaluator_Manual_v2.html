@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jury Analyst — Case Evaluation Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --blue: #0057FF;
+    --blue-light: #E8F0FF;
+    --blue-mid: #3B82F6;
+    --white: #ffffff;
+    --gray-50: #F8F9FB;
+    --gray-100: #EEF0F4;
+    --gray-200: #D8DCE6;
+    --gray-400: #9099AE;
+    --gray-600: #555E72;
+    --gray-800: #1E2333;
+    --green: #00A67E;
+    --green-light: #E6F7F3;
+    --amber: #F59E0B;
+    --amber-light: #FEF3C7;
+    --red: #EF4444;
+    --red-light: #FEE2E2;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --radius: 12px;
+    --radius-lg: 20px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--white);
+    color: var(--gray-800);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--white);
+    border-bottom: 1.5px solid var(--gray-100);
+    padding: 0 40px;
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 68px;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-mark {
+    width: 38px; height: 38px; background: var(--blue);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700;
+    color: white; letter-spacing: -0.5px;
+  }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--blue); letter-spacing: -0.3px; }
+  .header-badge {
+    font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--blue); background: var(--blue-light); padding: 4px 12px; border-radius: 20px;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #F0F5FF 0%, #ffffff 60%);
+    border-bottom: 1.5px solid var(--gray-100);
+    padding: 40px 40px 36px; text-align: center;
+  }
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    color: var(--blue); letter-spacing: -1px; line-height: 1.1;
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    max-width: 1180px; margin: 0 auto;
+    padding: 48px 40px 80px;
+    display: grid; grid-template-columns: 1fr 400px;
+    gap: 36px; align-items: start;
+  }
+
+  /* TAB NAV */
+  .tab-nav {
+    display: flex; gap: 4px;
+    background: var(--gray-50); border-radius: 12px;
+    padding: 4px; margin-bottom: 32px;
+    grid-column: 1 / -1;
+  }
+  .tab-btn {
+    flex: 1; padding: 10px 14px;
+    border: none; background: transparent; border-radius: 9px;
+    font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+    color: var(--gray-400); cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .tab-btn.active { background: var(--white); color: var(--blue); font-weight: 600; box-shadow: var(--shadow-sm); }
+  .tab-btn:hover:not(.active) { color: var(--gray-600); }
+
+  /* SECTIONS */
+  .section { display: none; animation: fadeIn 0.3s ease; }
+  .section.visible { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+  .section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+  .section-bar { width: 6px; height: 44px; border-radius: 4px; background: var(--blue); flex-shrink: 0; }
+  .section-title { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--blue); letter-spacing: -0.5px; }
+  .section-subtitle { font-size: 13px; color: var(--gray-400); font-weight: 400; margin-top: 2px; }
+
+  /* CARDS */
+  .card {
+    background: var(--white); border: 1.5px solid var(--gray-100);
+    border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px;
+    box-shadow: var(--shadow-sm); transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .card:hover { border-color: var(--gray-200); box-shadow: var(--shadow-md); }
+  .card-label {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.8px;
+    text-transform: uppercase; color: var(--gray-400); margin-bottom: 16px;
+  }
+
+  /* FORM FIELDS */
+  .field { margin-bottom: 20px; }
+  .field label { display: block; font-size: 14px; font-weight: 500; color: var(--gray-600); margin-bottom: 8px; }
+  .field input[type="text"], .field input[type="number"], .field select, .field textarea {
+    width: 100%; border: 1.5px solid var(--gray-200); border-radius: 10px;
+    padding: 11px 14px; font-family: 'Outfit', sans-serif; font-size: 14px;
+    color: var(--gray-800); background: var(--white); outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,87,255,0.1);
+  }
+  .field textarea { min-height: 90px; resize: vertical; }
+
+  /* SLIDERS */
+  .slider-row { margin-bottom: 20px; }
+  .slider-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .slider-label { font-size: 14px; font-weight: 500; color: var(--gray-600); }
+  .slider-value {
+    font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500;
+    color: var(--blue); background: var(--blue-light);
+    padding: 2px 8px; border-radius: 6px; min-width: 32px; text-align: center;
+  }
+  input[type="range"] {
+    width: 100%; height: 4px; appearance: none;
+    background: var(--gray-200); border-radius: 4px; outline: none; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--blue); border: 3px solid white;
+    box-shadow: 0 1px 4px rgba(0,87,255,0.3); cursor: pointer; transition: transform 0.15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  .slider-hint { display: flex; justify-content: space-between; font-size: 11px; color: var(--gray-400); margin-top: 5px; }
+
+  /* TOGGLES */
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0; border-bottom: 1px solid var(--gray-100);
+  }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-label { font-size: 14px; font-weight: 500; color: var(--gray-600); }
+  .toggle {
+    width: 42px; height: 24px; background: var(--gray-200); border-radius: 12px;
+    position: relative; cursor: pointer; transition: background 0.2s;
+    border: none; outline: none; flex-shrink: 0;
+  }
+  .toggle.on { background: var(--blue); }
+  .toggle::after {
+    content: ''; position: absolute; width: 18px; height: 18px;
+    background: white; border-radius: 50%; top: 3px; left: 3px;
+    transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle.on::after { transform: translateX(18px); }
+  /* NA BUTTON */
+  .na-btn {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 3px 9px; border-radius: 6px; border: 1.5px solid var(--gray-200);
+    background: transparent; color: var(--gray-400); cursor: pointer;
+    font-family: 'Outfit', sans-serif; transition: all 0.2s;
+    flex-shrink: 0; white-space: nowrap;
+  }
+  .na-btn.active {
+    background: var(--gray-100); border-color: var(--gray-400);
+    color: var(--gray-600); font-weight: 700;
+  }
+  .slider-row.na-active input[type="range"] { opacity: 0.3; pointer-events: none; }
+  .slider-row.na-active .slider-value { opacity: 0.3; }
+  .toggle-row.na-active .toggle { opacity: 0.3; pointer-events: none; }
+  .toggle-row.na-active .toggle-label { opacity: 0.5; }
+
+
+  /* DOLLAR INPUTS */
+  .dollar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .dollar-field { position: relative; }
+  .dollar-field label { font-size: 12px; font-weight: 500; color: var(--gray-400); display: block; margin-bottom: 6px; }
+  .dollar-field input {
+    width: 100%; border: 1.5px solid var(--gray-200); border-radius: 10px;
+    padding: 10px 14px 10px 26px; font-family: 'DM Mono', monospace;
+    font-size: 14px; color: var(--gray-800); outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .dollar-field input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,87,255,0.1); }
+  .dollar-field::before {
+    content: '$'; position: absolute; left: 10px; bottom: 11px;
+    color: var(--gray-400); font-size: 13px; font-weight: 500;
+  }
+
+  /* NAV BUTTONS */
+  .nav-row { display: flex; gap: 12px; margin-top: 32px; justify-content: flex-end; }
+  .btn {
+    padding: 12px 28px; border-radius: 10px; font-family: 'Outfit', sans-serif;
+    font-size: 14px; font-weight: 600; cursor: pointer; border: none;
+    transition: all 0.2s; letter-spacing: 0.2px;
+  }
+  .btn-primary { background: var(--blue); color: white; box-shadow: 0 4px 14px rgba(0,87,255,0.25); }
+  .btn-primary:hover { background: #0047D0; box-shadow: 0 6px 20px rgba(0,87,255,0.35); transform: translateY(-1px); }
+  .btn-outline { background: transparent; color: var(--gray-600); border: 1.5px solid var(--gray-200); }
+  .btn-outline:hover { border-color: var(--gray-400); color: var(--gray-800); }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--gray-100); margin: 20px 0; }
+
+  /* SIDEBAR */
+  .sidebar { position: sticky; top: 100px; }
+  .score-card {
+    background: var(--white); border: 1.5px solid var(--gray-100);
+    border-radius: var(--radius-lg); padding: 28px;
+    box-shadow: var(--shadow-md); margin-bottom: 20px;
+  }
+  .score-card-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--gray-400); margin-bottom: 20px;
+  }
+  .score-ring-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
+  .score-ring { position: relative; width: 120px; height: 120px; margin-bottom: 12px; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring-bg { fill: none; stroke: var(--gray-100); stroke-width: 8; }
+  .score-ring-fill {
+    fill: none; stroke: var(--blue); stroke-width: 8; stroke-linecap: round;
+    stroke-dasharray: 283; stroke-dashoffset: 283;
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1), stroke 0.4s;
+  }
+  .score-ring-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+  .score-number { font-family: 'DM Serif Display', serif; font-size: 30px; color: var(--blue); line-height: 1; }
+  .score-max { font-size: 12px; color: var(--gray-400); }
+  .score-verdict { font-size: 14px; font-weight: 600; color: var(--gray-600); text-align: center; }
+
+  .score-breakdown { display: flex; flex-direction: column; gap: 10px; }
+  .score-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .score-item-label { font-size: 13px; color: var(--gray-600); font-weight: 500; flex: 1; }
+  .score-item-bar { flex: 2; height: 6px; background: var(--gray-100); border-radius: 4px; overflow: hidden; }
+  .score-item-fill { height: 100%; background: var(--blue); border-radius: 4px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); width: 0%; }
+  .score-item-val { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--gray-400); min-width: 28px; text-align: right; }
+
+  /* VALUE CARD */
+  .value-card { background: var(--blue); border-radius: var(--radius-lg); padding: 24px; color: white; margin-bottom: 20px; }
+  .value-card-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; opacity: 0.7; margin-bottom: 16px; }
+  .value-main { font-family: 'DM Serif Display', serif; font-size: 34px; letter-spacing: -1px; }
+  .value-sub { font-size: 12px; opacity: 0.7; }
+  .value-range-detail { font-size: 13px; opacity: 0.8; }
+
+  /* RESULT PAGE */
+  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+  .result-box {
+    background: var(--gray-50); border: 1.5px solid var(--gray-100);
+    border-radius: var(--radius); padding: 20px; text-align: center;
+  }
+  .result-box.highlight { background: var(--blue-light); border-color: rgba(0,87,255,0.2); }
+  .result-box-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--gray-400); margin-bottom: 8px;
+  }
+  .result-box.highlight .result-box-label { color: var(--blue); }
+  .result-box-value { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--gray-800); letter-spacing: -0.5px; }
+  .result-box.highlight .result-box-value { color: var(--blue); }
+  .result-box-note { font-size: 12px; color: var(--gray-400); margin-top: 4px; }
+
+  /* RISK BADGE */
+  .risk-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+  .risk-low { background: var(--green-light); color: var(--green); }
+  .risk-med { background: var(--amber-light); color: var(--amber); }
+  .risk-high { background: var(--red-light); color: var(--red); }
+
+  /* GUIDE CARD */
+  .guide-row { font-size: 13px; line-height: 1.7; color: var(--gray-600); }
+  .guide-row strong { display: inline-block; width: 60px; }
+
+  /* CLIENT TAB SPECIFIC */
+  .client-risk-indicator {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; border-radius: 10px;
+    margin-bottom: 16px;
+    font-size: 13px; font-weight: 500;
+  }
+  .client-risk-indicator.low { background: var(--green-light); color: var(--green); }
+  .client-risk-indicator.med { background: var(--amber-light); color: var(--amber); }
+  .client-risk-indicator.high { background: var(--red-light); color: var(--red); }
+  .client-risk-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .sidebar { position: static; }
+    header, .hero { padding-left: 20px; padding-right: 20px; }
+    .main { padding: 32px 20px 60px; }
+    .dollar-grid { grid-template-columns: 1fr; }
+    .result-grid { grid-template-columns: 1fr; }
+    .tab-btn { font-size: 11px; padding: 8px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">JA</div>
+    <span class="logo-text">Jury Analyst</span>
+  </div>
+  <span class="header-badge">Case Evaluation Calculator</span>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Case Evaluation Calculator</h1>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TAB NAV -->
+  <div class="tab-nav" id="tabNav">
+    <button class="tab-btn active" onclick="goToTab(0)">Liability</button>
+    <button class="tab-btn" onclick="goToTab(1)">Causation</button>
+    <button class="tab-btn" onclick="goToTab(2)">Damages</button>
+    <button class="tab-btn" onclick="goToTab(3)">Venue &amp; Jury</button>
+    <button class="tab-btn" onclick="goToTab(4)">Client</button>
+    <button class="tab-btn" onclick="goToTab(5)">Results</button>
+  </div>
+
+  <!-- LEFT COLUMN -->
+  <div>
+
+    <!-- ══ TAB 0: LIABILITY ══ -->
+    <div class="section visible" id="sec0">
+      <div class="section-header">
+        <div class="section-bar"></div>
+        <div>
+          <div class="section-title">Liability &amp; Fault</div>
+          <div class="section-subtitle">Assess negligence, code violations, and comparative fault</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Case Overview</div>
+        <div class="field">
+          <label>Case Type</label>
+          <select id="caseType">
+            <option value="">Select case type…</option>
+            <option>Premises Liability</option>
+            <option>Motor Vehicle Accident</option>
+            <option>Medical Malpractice</option>
+            <option>Products Liability</option>
+            <option>Slip &amp; Fall</option>
+            <option>Employment / Discrimination</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Brief Case Description</label>
+          <textarea id="caseDesc" placeholder="Describe the incident and key facts…"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Liability Scoring</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Code / Regulatory Violation Severity</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-codeViol">3</span><button class="na-btn" id="na-codeViol" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="codeViol" oninput="updateSlider(this,'v-codeViol')" />
+          <div class="slider-hint"><span>None</span><span>Extreme</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Hazard Visibility (how hidden was it?)</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-hazardVis">3</span><button class="na-btn" id="na-hazardVis" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="hazardVis" oninput="updateSlider(this,'v-hazardVis')" />
+          <div class="slider-hint"><span>Obvious</span><span>Hidden</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Owner / Defendant Safety Culture</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-safetyQ">3</span><button class="na-btn" id="na-safetyQ" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="safetyQ" oninput="updateSlider(this,'v-safetyQ')" />
+          <div class="slider-hint"><span>Exemplary</span><span>Negligent</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Evidence Quality (video, witnesses, records)</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-evidQ">3</span><button class="na-btn" id="na-evidQ" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="evidQ" oninput="updateSlider(this,'v-evidQ')" />
+          <div class="slider-hint"><span>Weak</span><span>Strong</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Plaintiff Comparative Fault %</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-pFault">10</span><button class="na-btn" id="na-pFault" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="100" value="10" id="pFault" oninput="updateSlider(this,'v-pFault','%')" />
+          <div class="slider-hint"><span>0%</span><span>100%</span></div>
+        </div>
+        <div class="card-label" style="margin-top:16px">Flags</div>
+        <div class="toggle-row"><span class="toggle-label">Prior similar incidents at same location</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-priorInc" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-priorInc" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+        <div class="toggle-row"><span class="toggle-label">Defendant destroyed / failed to preserve evidence</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-spoliation" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-spoliation" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+        <div class="toggle-row"><span class="toggle-label">Defendant admitted fault or made statements</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-admitted" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-admitted" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn btn-primary" onclick="goToTab(1)">Next: Causation</button>
+      </div>
+    </div>
+
+    <!-- ══ TAB 1: CAUSATION ══ -->
+    <div class="section" id="sec1">
+      <div class="section-header">
+        <div class="section-bar"></div>
+        <div>
+          <div class="section-title">Causation Analysis</div>
+          <div class="section-subtitle">Link the incident to the injuries claimed</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Causation Strength</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Overall Causation Clarity</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-causeClarity">3</span><button class="na-btn" id="na-causeClarity" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="causeClarity" oninput="updateSlider(this,'v-causeClarity')" />
+          <div class="slider-hint"><span>Highly Disputed</span><span>Clear &amp; Direct</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Expert Support for Causation</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-expertSupp">3</span><button class="na-btn" id="na-expertSupp" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="expertSupp" oninput="updateSlider(this,'v-expertSupp')" />
+          <div class="slider-hint"><span>None / Weak</span><span>Strong / Multiple</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Temporal Link (immediate symptom onset?)</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-temporal">3</span><button class="na-btn" id="na-temporal" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="temporal" oninput="updateSlider(this,'v-temporal')" />
+          <div class="slider-hint"><span>Large Gap / Delayed</span><span>Immediate</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Objective Medical Documentation</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-objMed">3</span><button class="na-btn" id="na-objMed" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="objMed" oninput="updateSlider(this,'v-objMed')" />
+          <div class="slider-hint"><span>Soft Tissue Only</span><span>Imaging / Labs</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Pre-Existing Conditions</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Pre-existing Condition Severity</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-preExist">2</span><button class="na-btn" id="na-preExist" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="2" id="preExist" oninput="updateSlider(this,'v-preExist')" />
+          <div class="slider-hint"><span>None</span><span>Severe / Active</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Defense Alternative Causation Strength</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-defAlt">2</span><button class="na-btn" id="na-defAlt" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="2" id="defAlt" oninput="updateSlider(this,'v-defAlt')" />
+          <div class="slider-hint"><span>Weak</span><span>Compelling</span></div>
+        </div>
+        <div class="toggle-row"><span class="toggle-label">Documented pre-injury baseline (normal imaging before)</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-baseline" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-baseline" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+        <div class="toggle-row"><span class="toggle-label">Gap in treatment (&gt;60 days)</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-treatGap" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-treatGap" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+        <div class="toggle-row"><span class="toggle-label">Treating physician supports causation</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle  on" id="t-treatingMD" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-treatingMD" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn btn-outline" onclick="goToTab(0)">Back</button>
+        <button class="btn btn-primary" onclick="goToTab(2)">Next: Damages</button>
+      </div>
+    </div>
+
+    <!-- ══ TAB 2: DAMAGES ══ -->
+    <div class="section" id="sec2">
+      <div class="section-header">
+        <div class="section-bar"></div>
+        <div>
+          <div class="section-title">Damages</div>
+          <div class="section-subtitle">Economic and non-economic harm assessment</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Economic Damages</div>
+        <div class="dollar-grid">
+          <div class="dollar-field"><label>Past Medical Bills</label><input type="number" id="pastMed" placeholder="0" oninput="updateScores()" /></div>
+          <div class="dollar-field"><label>Future Medical (est.)</label><input type="number" id="futureMed" placeholder="0" oninput="updateScores()" /></div>
+          <div class="dollar-field"><label>Past Lost Wages</label><input type="number" id="pastWage" placeholder="0" oninput="updateScores()" /></div>
+          <div class="dollar-field"><label>Future Earning Capacity Loss</label><input type="number" id="futureWage" placeholder="0" oninput="updateScores()" /></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Non-Economic Factors</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Injury Severity / Permanency</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-injSev">3</span><button class="na-btn" id="na-injSev" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="injSev" oninput="updateSlider(this,'v-injSev')" />
+          <div class="slider-hint"><span>Minor / Resolved</span><span>Catastrophic / Permanent</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Loss of Enjoyment / Lifestyle Impact</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-lifestyle">3</span><button class="na-btn" id="na-lifestyle" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="lifestyle" oninput="updateSlider(this,'v-lifestyle')" />
+          <div class="slider-hint"><span>Minimal</span><span>Severe / Life-Altering</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Plaintiff Sympathy / Likability</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-sympathy">3</span><button class="na-btn" id="na-sympathy" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="sympathy" oninput="updateSlider(this,'v-sympathy')" />
+          <div class="slider-hint"><span>Low</span><span>Very High</span></div>
+        </div>
+        <div class="toggle-row"><span class="toggle-label">Plaintiff is permanently disabled</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-permDisabled" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-permDisabled" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+        <div class="toggle-row"><span class="toggle-label">Defendant showed bad faith / cover-up behavior</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-badFaith" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-badFaith" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+        <div class="toggle-row"><span class="toggle-label">Day-in-the-life / compelling visual evidence</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-visual" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-visual" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn btn-outline" onclick="goToTab(1)">Back</button>
+        <button class="btn btn-primary" onclick="goToTab(3)">Next: Venue &amp; Jury</button>
+      </div>
+    </div>
+
+    <!-- ══ TAB 3: VENUE & JURY ══ -->
+    <div class="section" id="sec3">
+      <div class="section-header">
+        <div class="section-bar"></div>
+        <div>
+          <div class="section-title">Venue &amp; Jury Analytics</div>
+          <div class="section-subtitle">Jurisdiction, jury pool characteristics, and case posture</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Venue</div>
+        <div class="field"><label>State / Jurisdiction</label><input type="text" id="state" placeholder="e.g. California" /></div>
+        <div class="field"><label>County</label><input type="text" id="county" placeholder="e.g. Los Angeles County" /></div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Venue Generosity (historical jury awards)</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-venueGen">3</span><button class="na-btn" id="na-venueGen" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="venueGen" oninput="updateSlider(this,'v-venueGen')" />
+          <div class="slider-hint"><span>Defense-Friendly</span><span>Plaintiff-Friendly</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Jury Pool &amp; Case Posture</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Jury Pool Plaintiff-Friendliness</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-juryPool">3</span><button class="na-btn" id="na-juryPool" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="juryPool" oninput="updateSlider(this,'v-juryPool')" />
+          <div class="slider-hint"><span>Conservative</span><span>Progressive</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Defendant "Bad Actor" Public Perception</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-defPerc">3</span><button class="na-btn" id="na-defPerc" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="defPerc" oninput="updateSlider(this,'v-defPerc')" />
+          <div class="slider-hint"><span>Sympathetic / Neutral</span><span>Vilified</span></div>
+        </div>
+        <div class="field" style="margin-top:16px">
+          <label>Case Stage</label>
+          <select id="caseStage">
+            <option>Pre-suit</option>
+            <option>Post-filing / Discovery</option>
+            <option>Post-MSJ / Pre-trial</option>
+            <option>On eve of trial</option>
+            <option>Post-verdict</option>
+          </select>
+        </div>
+        <div class="toggle-row"><span class="toggle-label">Plaintiff willing to go to trial</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle  on" id="t-toTrial" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-toTrial" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+        <div class="toggle-row"><span class="toggle-label">Damages caps apply in this jurisdiction</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-caps" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-caps" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+        <div class="toggle-row"><span class="toggle-label">Defendant is a large corporation or institution</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-bigDef" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-bigDef" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn btn-outline" onclick="goToTab(2)">Back</button>
+        <button class="btn btn-primary" onclick="goToTab(4)">Next: Client</button>
+      </div>
+    </div>
+
+    <!-- ══ TAB 4: CLIENT ══ -->
+    <div class="section" id="sec4">
+      <div class="section-header">
+        <div class="section-bar"></div>
+        <div>
+          <div class="section-title">Client Evaluation</div>
+          <div class="section-subtitle">Assess plaintiff risk factors that affect jury perception and case management</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Credibility &amp; Presentation</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Story Consistency Across Records &amp; Testimony</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-consistency">3</span><button class="na-btn" id="na-consistency" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="consistency" oninput="updateSlider(this,'v-consistency')" />
+          <div class="slider-hint"><span>Multiple Contradictions</span><span>Fully Consistent</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Courtroom Likability &amp; Presentation</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-likability">3</span><button class="na-btn" id="na-likability" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="likability" oninput="updateSlider(this,'v-likability')" />
+          <div class="slider-hint"><span>Difficult / Off-putting</span><span>Highly Relatable</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Sympathy Factor (narrative, life impact)</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-clientSympathy">3</span><button class="na-btn" id="na-clientSympathy" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="clientSympathy" oninput="updateSlider(this,'v-clientSympathy')" />
+          <div class="slider-hint"><span>Low</span><span>Very High</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Perceived Anger / Greed in Filing Lawsuit</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-greedPerc">2</span><button class="na-btn" id="na-greedPerc" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="2" id="greedPerc" oninput="updateSlider(this,'v-greedPerc')" />
+          <div class="slider-hint"><span>None — Justified</span><span>Appears Opportunistic</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Risk Factors</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Social Media Exposure Risk</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-socialMedia">2</span><button class="na-btn" id="na-socialMedia" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="2" id="socialMedia" oninput="updateSlider(this,'v-socialMedia')" />
+          <div class="slider-hint"><span>Clean / Private</span><span>Contradicts Claims</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Client Manageability (attorney-client friction)</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-maintenance">2</span><button class="na-btn" id="na-maintenance" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="2" id="maintenance" oninput="updateSlider(this,'v-maintenance')" />
+          <div class="slider-hint"><span>Easy / Cooperative</span><span>High Maintenance</span></div>
+        </div>
+        <div class="toggle-row"><span class="toggle-label">Prior lawsuit or claims history</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-priorLit" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-priorLit" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+        <div class="toggle-row"><span class="toggle-label">Criminal record (admissible or discoverable)</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-crimRec" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-crimRec" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+        <div class="toggle-row"><span class="toggle-label">Gaps or inconsistencies in medical history</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-medGaps" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-medGaps" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+        <div class="toggle-row"><span class="toggle-label">Active social media contradicting injury claims</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-smContradicts" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-smContradicts" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Jury Perception Indicators</div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Before / After Witness Support</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-beforeAfter">3</span><button class="na-btn" id="na-beforeAfter" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="beforeAfter" oninput="updateSlider(this,'v-beforeAfter')" />
+          <div class="slider-hint"><span>None</span><span>Multiple Strong Witnesses</span></div>
+        </div>
+        <div class="slider-row">
+          <div class="slider-top"><span class="slider-label">Employment / Life Stability Pre-Incident</span><div style="display:flex;align-items:center;gap:8px;"><span class="slider-value" id="v-stability">3</span><button class="na-btn" id="na-stability" onclick="toggleNA(this)"  type="button">N/A</button></div></div>
+          <input type="range" min="0" max="5" value="3" id="stability" oninput="updateSlider(this,'v-stability')" />
+          <div class="slider-hint"><span>Unstable / Unemployed</span><span>Stable Career &amp; Family</span></div>
+        </div>
+        <div class="toggle-row"><span class="toggle-label">Client has dependents (children, caregiving role)</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-dependents" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-dependents" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+        <div class="toggle-row"><span class="toggle-label">Client was highly active before incident (athlete, worker)</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-activeLife" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-activeLife" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+        <div class="toggle-row"><span class="toggle-label">Plaintiff depression / mental health diagnosis post-incident</span><div style="display:flex;align-items:center;gap:8px;"><button class="toggle " id="t-mentalHealth" onclick="toggleBtn(this)" type="button"></button><button class="na-btn" id="na-mentalHealth" onclick="toggleNA(this)" type="button">N/A</button></div></div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn btn-outline" onclick="goToTab(3)">Back</button>
+        <button class="btn btn-primary" onclick="goToTab(5)">View Results</button>
+      </div>
+    </div>
+
+    <!-- ══ TAB 5: RESULTS ══ -->
+    <div class="section" id="sec5">
+      <div class="section-header">
+        <div class="section-bar"></div>
+        <div>
+          <div class="section-title">Case Evaluation Results</div>
+          <div class="section-subtitle">Score summary and estimated case value</div>
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-box highlight">
+          <div class="result-box-label">Overall Case Score</div>
+          <div class="result-box-value" id="r-totalScore">—</div>
+          <div class="result-box-note">out of 100</div>
+        </div>
+        <div class="result-box highlight">
+          <div class="result-box-label">Est. Win Probability</div>
+          <div class="result-box-value" id="r-winProb">—</div>
+          <div class="result-box-note">plaintiff verdict</div>
+        </div>
+        <div class="result-box">
+          <div class="result-box-label">Liability</div>
+          <div class="result-box-value" id="r-liab">—</div>
+          <div class="result-box-note">out of 20</div>
+        </div>
+        <div class="result-box">
+          <div class="result-box-label">Causation</div>
+          <div class="result-box-value" id="r-cause">—</div>
+          <div class="result-box-note">out of 20</div>
+        </div>
+        <div class="result-box">
+          <div class="result-box-label">Damages</div>
+          <div class="result-box-value" id="r-dam">—</div>
+          <div class="result-box-note">out of 20</div>
+        </div>
+        <div class="result-box">
+          <div class="result-box-label">Venue / Jury</div>
+          <div class="result-box-value" id="r-venue">—</div>
+          <div class="result-box-note">out of 20</div>
+        </div>
+        <div class="result-box">
+          <div class="result-box-label">Client</div>
+          <div class="result-box-value" id="r-client">—</div>
+          <div class="result-box-note">out of 20</div>
+        </div>
+        <div class="result-box">
+          <div class="result-box-label">Est. Case Value (EV)</div>
+          <div class="result-box-value" id="r-ev">—</div>
+          <div class="result-box-note">expected value</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
+        <span id="riskBadge"></span>
+      </div>
+
+      <div class="nav-row" style="justify-content:flex-start; margin-top:8px;">
+        <button class="btn btn-outline" onclick="goToTab(3)">Back</button>
+        <button class="btn btn-outline" onclick="goToTab(0)">Start Over</button>
+      </div>
+    </div>
+
+  </div><!-- /left col -->
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="score-card">
+      <div class="score-card-title">Live Case Score</div>
+      <div class="score-ring-wrap">
+        <div class="score-ring">
+          <svg viewBox="0 0 100 100" width="120" height="120">
+            <circle class="score-ring-bg" cx="50" cy="50" r="45" />
+            <circle class="score-ring-fill" id="ringFill" cx="50" cy="50" r="45" />
+          </svg>
+          <div class="score-ring-label">
+            <div class="score-number" id="sideScore">0</div>
+            <div class="score-max">/100</div>
+          </div>
+        </div>
+        <div class="score-verdict" id="sideVerdict">Enter data to score</div>
+      </div>
+
+      <div class="score-breakdown">
+        <div class="score-item">
+          <span class="score-item-label">Liability</span>
+          <div class="score-item-bar"><div class="score-item-fill" id="bar-liab"></div></div>
+          <span class="score-item-val" id="bv-liab">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-item-label">Causation</span>
+          <div class="score-item-bar"><div class="score-item-fill" id="bar-cause"></div></div>
+          <span class="score-item-val" id="bv-cause">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-item-label">Damages</span>
+          <div class="score-item-bar"><div class="score-item-fill" id="bar-dam"></div></div>
+          <span class="score-item-val" id="bv-dam">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-item-label">Venue / Jury</span>
+          <div class="score-item-bar"><div class="score-item-fill" id="bar-venue"></div></div>
+          <span class="score-item-val" id="bv-venue">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-item-label">Client</span>
+          <div class="score-item-bar"><div class="score-item-fill" id="bar-client"></div></div>
+          <span class="score-item-val" id="bv-client">0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="value-card">
+      <div class="value-card-title">Estimated Case Value</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:6px;">
+        <span class="value-main" id="v-estVal">—</span>
+      </div>
+      <div class="value-range-detail" id="v-estRange">Complete all sections to generate estimate</div>
+    </div>
+
+    <div class="score-card" style="margin-top:0">
+      <div class="score-card-title">Scoring Guide</div>
+      <div class="guide-row">
+        <div style="margin-bottom:8px"><strong style="color:var(--green)">80–100</strong> Strong plaintiff case</div>
+        <div style="margin-bottom:8px"><strong style="color:var(--amber)">55–79</strong> Moderate / balanced risk</div>
+        <div style="margin-bottom:8px"><strong style="color:var(--red)">0–54</strong> High defense risk</div>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:12px;color:var(--gray-400);line-height:1.6;margin-top:8px;">
+        Each of the 5 dimensions contributes up to 20 points. Value estimate uses economic inputs plus a non-economic multiplier scaled to case strength.
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+</div><!-- /main -->
+
+<script>
+let currentTab = 0;
+
+// NA state: set of IDs that are marked N/A
+const naSet = new Set();
+
+function toggleNA(btn) {
+  // btn is the NA button; find parent row
+  const row = btn.closest('.slider-row') || btn.closest('.toggle-row');
+  const isActive = btn.classList.toggle('active');
+  // Extract the base id from na-btn id (na-X => slider v-X or toggle t-X)
+  const naId = btn.id; // e.g. na-codeViol or na-priorInc
+  const baseKey = naId.replace(/^na-/, '');
+
+  if (isActive) {
+    naSet.add(baseKey);
+    if (row) row.classList.add('na-active');
+  } else {
+    naSet.delete(baseKey);
+    if (row) row.classList.remove('na-active');
+  }
+  updateScores();
+}
+
+function isNA(key) { return naSet.has(key); }
+
+function goToTab(i) {
+  document.querySelectorAll('.section').forEach((s, idx) => s.classList.toggle('visible', idx === i));
+  document.querySelectorAll('.tab-btn').forEach((b, idx) => b.classList.toggle('active', idx === i));
+  currentTab = i;
+  if (i === 5) updateResults();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateSlider(el, valId, suffix='') {
+  document.getElementById(valId).textContent = el.value + suffix;
+  updateScores();
+}
+
+function toggleBtn(el) { el.classList.toggle('on'); updateScores(); }
+
+// sv() returns slider value, or null if NA
+function sv(id) {
+  if (isNA(id)) return null;
+  return parseInt(document.getElementById(id).value);
+}
+
+// tv() returns toggle value (0/1), or null if NA
+function tv(id) {
+  const baseId = id.replace(/^t-/, '');
+  if (isNA(baseId)) return null;
+  return document.getElementById(id).classList.contains('on') ? 1 : 0;
+}
+
+// Weighted score helper: skips null values and rescales weights proportionally
+function wScore(items) {
+  let totalWeight = 0, totalScore = 0;
+  for (const [val, weight] of items) {
+    if (val === null) continue;
+    totalWeight += Math.abs(weight);
+    totalScore += val * weight;
+  }
+  if (totalWeight === 0) return 0;
+  // Rescale: project onto the original max weight sum
+  const origMax = items.reduce((s, [,w]) => s + Math.abs(w), 0);
+  return (totalScore / totalWeight) * origMax;
+}
+
+function calcScores() {
+  // LIABILITY (0–20)
+  const liabRaw = wScore([
+    [sv('codeViol') !== null ? sv('codeViol')/5 : null, 6],
+    [sv('hazardVis') !== null ? sv('hazardVis')/5 : null, 4],
+    [sv('safetyQ') !== null ? sv('safetyQ')/5 : null, 4],
+    [sv('evidQ') !== null ? sv('evidQ')/5 : null, 3],
+    [tv('t-priorInc'), 1.5],
+    [tv('t-spoliation'), 1.5],
+    [tv('t-admitted'), 1],
+  ]) - (!isNA('pFault') ? (parseInt(document.getElementById('pFault').value)||0)/100*4 : 0);
+  const liab = Math.min(20, Math.max(0, Math.round(liabRaw)));
+
+  // CAUSATION (0–20)
+  const causeRaw = wScore([
+    [sv('causeClarity') !== null ? sv('causeClarity')/5 : null, 6],
+    [sv('expertSupp') !== null ? sv('expertSupp')/5 : null, 4],
+    [sv('temporal') !== null ? sv('temporal')/5 : null, 3],
+    [sv('objMed') !== null ? sv('objMed')/5 : null, 3],
+    [tv('t-baseline'), 1.5],
+    [tv('t-treatingMD'), 2],
+  ]) - wScore([
+    [sv('preExist') !== null ? sv('preExist')/5 : null, 2],
+    [sv('defAlt') !== null ? sv('defAlt')/5 : null, 2],
+    [tv('t-treatGap'), 1],
+  ]);
+  const cause = Math.min(20, Math.max(0, Math.round(causeRaw)));
+
+  // DAMAGES (0–20)
+  const past = parseFloat(document.getElementById('pastMed').value)||0;
+  const future = parseFloat(document.getElementById('futureMed').value)||0;
+  const wage = (parseFloat(document.getElementById('pastWage').value)||0) +
+               (parseFloat(document.getElementById('futureWage').value)||0);
+  const econTotal = past + future + wage;
+  const econScore = Math.min(6, econTotal / 200000);
+  const damRaw = econScore + wScore([
+    [sv('injSev') !== null ? sv('injSev')/5 : null, 5],
+    [sv('lifestyle') !== null ? sv('lifestyle')/5 : null, 4],
+    [sv('sympathy') !== null ? sv('sympathy')/5 : null, 3],
+    [tv('t-permDisabled'), 1],
+    [tv('t-badFaith'), 1],
+    [tv('t-visual'), 0.5],
+  ]);
+  const dam = Math.min(20, Math.max(0, Math.round(damRaw)));
+
+  // VENUE/JURY (0–20)
+  const venueRaw = wScore([
+    [sv('venueGen') !== null ? sv('venueGen')/5 : null, 7],
+    [sv('juryPool') !== null ? sv('juryPool')/5 : null, 5],
+    [sv('defPerc') !== null ? sv('defPerc')/5 : null, 4],
+    [tv('t-toTrial'), 2],
+    [tv('t-bigDef'), 1.5],
+  ]) - (tv('t-caps') !== null ? tv('t-caps') * 2 : 0);
+  const venue = Math.min(20, Math.max(0, Math.round(venueRaw)));
+
+  // CLIENT (0–20)
+  const clientRaw = wScore([
+    [sv('consistency') !== null ? sv('consistency')/5 : null, 4],
+    [sv('likability') !== null ? sv('likability')/5 : null, 3],
+    [sv('clientSympathy') !== null ? sv('clientSympathy')/5 : null, 3],
+    [sv('beforeAfter') !== null ? sv('beforeAfter')/5 : null, 2],
+    [sv('stability') !== null ? sv('stability')/5 : null, 1.5],
+    [tv('t-dependents'), 1],
+    [tv('t-activeLife'), 1],
+    [tv('t-mentalHealth'), 0.5],
+  ]) - wScore([
+    [sv('greedPerc') !== null ? sv('greedPerc')/5 : null, 3],
+    [sv('socialMedia') !== null ? sv('socialMedia')/5 : null, 2],
+    [sv('maintenance') !== null ? sv('maintenance')/5 : null, 1],
+    [tv('t-priorLit'), 1.5],
+    [tv('t-crimRec'), 1.5],
+    [tv('t-medGaps'), 1],
+    [tv('t-smContradicts'), 2],
+  ]);
+  const client = Math.min(20, Math.max(0, Math.round(clientRaw)));
+
+  const total = liab + cause + dam + venue + client;
+  return { liab, cause, dam, venue, client, total, econTotal };
+}
+
+function calcValue(s) {
+  const winProb = Math.min(90, Math.max(5, s.total));
+  const nonEconMult = 1 + (s.total / 100) * 4;
+  const gross = s.econTotal * nonEconMult;
+  const pFaultPct = !isNA('pFault') ? (parseInt(document.getElementById('pFault').value)||0) : 0;
+  const net = gross * (1 - pFaultPct / 100);
+  const ev = net * (winProb / 100);
+  return { ev, low: ev * 0.5, high: ev * 1.8, winProb };
+}
+
+function fmt(n) {
+  if (!n || n <= 0) return '—';
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '$' + Math.round(n/1e3).toLocaleString() + 'K';
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function updateScores() {
+  const s = calcScores();
+  const v = calcValue(s);
+
+  const circ = 283;
+  const offset = circ - (s.total / 100) * circ;
+  const ring = document.getElementById('ringFill');
+  ring.style.strokeDashoffset = offset;
+  ring.style.stroke = s.total >= 75 ? '#00A67E' : s.total >= 55 ? '#F59E0B' : '#0057FF';
+
+  document.getElementById('sideScore').textContent = s.total;
+  document.getElementById('sideVerdict').textContent =
+    s.total >= 80 ? 'Strong Plaintiff Case' :
+    s.total >= 65 ? 'Moderate — Defensible' :
+    s.total >= 50 ? 'Balanced Risk' : 'High Defense Risk';
+
+  ['liab','cause','dam','venue','client'].forEach(k => {
+    document.getElementById('bar-' + k).style.width = (s[k]/20*100) + '%';
+    document.getElementById('bv-' + k).textContent = s[k];
+  });
+
+  document.getElementById('v-estVal').textContent = s.econTotal > 0 ? fmt(v.ev) : '—';
+  document.getElementById('v-estRange').textContent = s.econTotal > 0
+    ? 'Range: ' + fmt(v.low) + ' – ' + fmt(v.high)
+    : 'Add economic damages to estimate value';
+}
+
+function updateResults() {
+  const s = calcScores();
+  const v = calcValue(s);
+
+  document.getElementById('r-totalScore').textContent = s.total;
+  document.getElementById('r-winProb').textContent = v.winProb + '%';
+  document.getElementById('r-liab').textContent = s.liab;
+  document.getElementById('r-cause').textContent = s.cause;
+  document.getElementById('r-dam').textContent = s.dam;
+  document.getElementById('r-venue').textContent = s.venue;
+  document.getElementById('r-client').textContent = s.client;
+  document.getElementById('r-ev').textContent = s.econTotal > 0 ? fmt(v.ev) : '—';
+
+  const badge = document.getElementById('riskBadge');
+  badge.innerHTML = s.total >= 75
+    ? '<span class="risk-badge risk-low">Strong Plaintiff Case</span>'
+    : s.total >= 55
+    ? '<span class="risk-badge risk-med">Moderate Risk</span>'
+    : '<span class="risk-badge risk-high">High Defense Risk</span>';
+}
+
+updateScores();
+</script>
+</body>
+</html>
