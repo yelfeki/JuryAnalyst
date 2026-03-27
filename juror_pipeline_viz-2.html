@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jury Analyst — From Survey to Strategy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --navy: #0D1B3E;
+    --navy-mid: #1a2f5e;
+    --navy-light: #243d72;
+    --electric: #0057FF;
+    --electric-light: #EAF0FF;
+    --electric-mid: #C0D2FF;
+    --white: #ffffff;
+    --off-white: #F5F7FC;
+    --border: #D6DFF5;
+    --text-primary: #0D1B3E;
+    --text-secondary: #4A5880;
+    --text-muted: #8A96B8;
+    --success: #0B6B4A;
+    --success-bg: #E3F5ED;
+    --warn-bg: #FFF4E6;
+    --danger-bg: #FFF0EF;
+    --danger: #8B1A1A;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--off-white);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--white);
+    border-bottom: 2px solid var(--electric);
+    padding: 18px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-brand { display: flex; align-items: center; gap: 12px; }
+  .header-logo {
+    width: 36px; height: 36px;
+    background: var(--electric);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .header-logo svg { width: 18px; height: 18px; }
+  .brand-name { font-family: 'EB Garamond', serif; font-size: 18px; font-weight: 600; color: var(--navy); letter-spacing: 0.01em; }
+  .brand-tag { font-size: 11px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.05em; text-transform: uppercase; }
+  .header-title { font-size: 13px; color: var(--text-secondary); font-weight: 400; letter-spacing: 0.03em; }
+
+  /* ── Main ── */
+  .main { max-width: 1100px; margin: 0 auto; padding: 40px 32px 60px; }
+
+  .page-heading {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .page-heading h1 {
+    font-family: 'EB Garamond', serif;
+    font-size: 34px;
+    font-weight: 500;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .page-heading p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* ── Pipeline Steps ── */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .pipeline-step {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .pipeline-step.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .step-row {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 0 20px;
+    align-items: start;
+  }
+
+  /* connector line column */
+  .step-spine {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .spine-dot {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--electric);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 0 0 4px var(--electric-light);
+  }
+  .spine-line {
+    width: 2px;
+    flex: 1;
+    background: linear-gradient(to bottom, var(--electric-mid), transparent);
+    min-height: 32px;
+  }
+  .step-row:last-child .spine-line { display: none; }
+
+  /* card */
+  .step-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 28px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .step-card:hover { border-color: var(--electric); box-shadow: 0 4px 20px rgba(0,87,255,0.08); }
+  .step-card.active { border-color: var(--electric); box-shadow: 0 4px 24px rgba(0,87,255,0.12); }
+
+  .step-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .step-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--electric);
+  }
+  .step-toggle {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--off-white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: var(--text-muted);
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .step-card.active .step-toggle { background: var(--electric); border-color: var(--electric); color: white; }
+
+  .step-title {
+    font-family: 'EB Garamond', serif;
+    font-size: 22px; font-weight: 500;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .step-desc {
+    font-size: 13px; color: var(--text-secondary); line-height: 1.65;
+  }
+
+  /* expandable detail */
+  .step-detail {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+    opacity: 0;
+  }
+  .step-detail.open { max-height: 800px; opacity: 1; }
+
+  .step-detail-inner { padding-top: 20px; border-top: 1px solid var(--border); margin-top: 18px; }
+
+  /* ── Variable clusters ── */
+  .cluster-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .cluster {
+    border-radius: 8px;
+    padding: 14px 16px;
+    border: 1px solid;
+  }
+  .cluster-label { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 8px; }
+  .cluster-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag {
+    font-size: 11px; padding: 3px 9px; border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .cluster.demo { background: #EAF0FF; border-color: #C0D2FF; }
+  .cluster.demo .cluster-label { color: #0040CC; }
+  .cluster.demo .tag { background: white; color: #0040CC; border: 1px solid #C0D2FF; }
+
+  .cluster.psych { background: #F0EBF8; border-color: #D4C0ED; }
+  .cluster.psych .cluster-label { color: #5C2D91; }
+  .cluster.psych .tag { background: white; color: #5C2D91; border: 1px solid #D4C0ED; }
+
+  .cluster.legal { background: #E6F4F1; border-color: #A8D8CF; }
+  .cluster.legal .cluster-label { color: #0B6B4A; }
+  .cluster.legal .tag { background: white; color: #0B6B4A; border: 1px solid #A8D8CF; }
+
+  /* ── Model output ── */
+  .model-outputs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .model-card {
+    border-radius: 8px; padding: 16px 18px;
+    border: 1px solid var(--border);
+    background: var(--off-white);
+  }
+  .model-card-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .score-bar-wrap { display: flex; align-items: center; gap: 10px; }
+  .score-bar-bg { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+  .score-label { font-size: 13px; font-weight: 600; color: var(--navy); width: 36px; text-align: right; }
+
+  .predictor-list { display: flex; flex-direction: column; gap: 7px; }
+  .predictor-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+  .predictor-name { color: var(--text-secondary); }
+  .predictor-bar-bg { width: 80px; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .predictor-bar-fill { height: 100%; border-radius: 3px; }
+
+  /* ── Personas ── */
+  .persona-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .persona-card {
+    border-radius: 10px; padding: 18px;
+    border: 1.5px solid;
+  }
+  .persona-card.plaintiff { border-color: #A8D8CF; background: #E6F4F1; }
+  .persona-card.defense { border-color: #FFC0BC; background: #FFF0EF; }
+  .persona-name { font-family: 'EB Garamond', serif; font-size: 17px; font-weight: 500; margin-bottom: 4px; }
+  .persona-card.plaintiff .persona-name { color: #0B6B4A; }
+  .persona-card.defense .persona-name { color: #8B1A1A; }
+  .persona-badge {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    padding: 2px 9px; border-radius: 20px; margin-bottom: 10px;
+  }
+  .persona-card.plaintiff .persona-badge { background: #A8D8CF; color: #0B6B4A; }
+  .persona-card.defense .persona-badge { background: #FFC0BC; color: #8B1A1A; }
+  .persona-traits { display: flex; flex-direction: column; gap: 6px; }
+  .persona-trait { font-size: 12px; color: var(--text-secondary); display: flex; gap: 6px; }
+  .persona-trait::before { content: '—'; color: var(--text-muted); flex-shrink: 0; }
+
+  /* ── Voir Dire ── */
+  .vd-questions { display: flex; flex-direction: column; gap: 10px; }
+  .vd-q {
+    padding: 13px 16px;
+    border-radius: 8px;
+    border-left: 3px solid;
+    background: var(--white);
+    border-color: var(--electric);
+  }
+  .vd-q-label { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--electric); margin-bottom: 4px; }
+  .vd-q-text { font-size: 13px; color: var(--text-primary); line-height: 1.55; }
+  .vd-q-intent { font-size: 11px; color: var(--text-muted); margin-top: 5px; font-style: italic; }
+
+  /* ── Nav dots ── */
+  .nav-dots {
+    display: flex; justify-content: center; gap: 8px;
+    margin-bottom: 32px;
+  }
+  .nav-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .nav-dot.active { background: var(--electric); transform: scale(1.3); }
+
+  /* responsive */
+  @media (max-width: 680px) {
+    .cluster-grid { grid-template-columns: 1fr; }
+    .model-outputs { grid-template-columns: 1fr; }
+    .persona-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-brand">
+    <div class="header-logo">
+      <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="9" cy="9" r="7" stroke="white" stroke-width="2"/>
+        <line x1="9" y1="2" x2="9" y2="16" stroke="white" stroke-width="2"/>
+        <line x1="2" y1="9" x2="16" y2="9" stroke="white" stroke-width="2"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">Jury Analyst</div>
+      <div class="brand-tag">Data · Insights · Strategy</div>
+    </div>
+  </div>
+  <div class="header-title">From Survey Response to Voir Dire Strategy</div>
+</div>
+
+<div class="main">
+
+  <div class="page-heading">
+    <h1>How a Survey Becomes a Strategy</h1>
+    <p>Each juror response travels through four stages — from raw data to the questions that matter in the courtroom. Click any stage to explore.</p>
+  </div>
+
+  <div class="nav-dots" id="navDots"></div>
+
+  <div class="pipeline" id="pipeline">
+
+    <!-- STEP 1 -->
+    <div class="pipeline-step" data-step="0">
+      <div class="step-row">
+        <div class="step-spine">
+          <div class="spine-dot">1</div>
+          <div class="spine-line"></div>
+        </div>
+        <div class="step-card" onclick="toggleStep(this, 0)">
+          <div class="step-header">
+            <span class="step-label">Stage 1 — Data Collection</span>
+            <span class="step-toggle">+</span>
+          </div>
+          <div class="step-title">The Survey</div>
+          <div class="step-desc">We gather a rich profile of each juror — not just who they are, but how they think, what they value, and how they relate to fairness and accountability.</div>
+
+          <div class="step-detail" id="detail-0">
+            <div class="step-detail-inner">
+              <div class="cluster-grid">
+                <div class="cluster demo">
+                  <div class="cluster-label">Demographics</div>
+                  <div class="cluster-tags">
+                    <span class="tag">Age</span>
+                    <span class="tag">Gender</span>
+                    <span class="tag">Education</span>
+                    <span class="tag">Income</span>
+                    <span class="tag">Location</span>
+                    <span class="tag">Children</span>
+                  </div>
+                </div>
+                <div class="cluster psych">
+                  <div class="cluster-label">Psychology</div>
+                  <div class="cluster-tags">
+                    <span class="tag">Big Five traits</span>
+                    <span class="tag">Empathy</span>
+                    <span class="tag">Just World beliefs</span>
+                    <span class="tag">Narcissism</span>
+                    <span class="tag">Self-esteem</span>
+                  </div>
+                </div>
+                <div class="cluster legal">
+                  <div class="cluster-label">Legal Attitudes</div>
+                  <div class="cluster-tags">
+                    <span class="tag">Tort reform</span>
+                    <span class="tag">Frivolous suits</span>
+                    <span class="tag">Damage caps</span>
+                    <span class="tag">Prior litigation</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="pipeline-step" data-step="1">
+      <div class="step-row">
+        <div class="step-spine">
+          <div class="spine-dot">2</div>
+          <div class="spine-line"></div>
+        </div>
+        <div class="step-card" onclick="toggleStep(this, 1)">
+          <div class="step-header">
+            <span class="step-label">Stage 2 — Data Analysis</span>
+            <span class="step-toggle">+</span>
+          </div>
+          <div class="step-title">The Model</div>
+          <div class="step-desc">Data analysis identifies which variables actually predict plaintiff-leaning verdicts and damage award levels — separating signal from noise.</div>
+
+          <div class="step-detail" id="detail-1">
+            <div class="step-detail-inner">
+              <div class="model-outputs">
+                <div class="model-card">
+                  <div class="model-card-title">Sample Juror — Plaintiff Lean Score</div>
+                  <div style="margin-bottom:12px">
+                    <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Probability of plaintiff verdict</div>
+                    <div class="score-bar-wrap">
+                      <div class="score-bar-bg"><div class="score-bar-fill" id="mainBar" style="width:0%;background:var(--electric)"></div></div>
+                      <div class="score-label" id="mainBarLabel">—</div>
+                    </div>
+                  </div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Predicted damage award tier</div>
+                  <div class="score-bar-wrap">
+                    <div class="score-bar-bg"><div class="score-bar-fill" id="dmgBar" style="width:0%;background:#5C2D91"></div></div>
+                    <div class="score-label" id="dmgBarLabel">—</div>
+                  </div>
+                </div>
+                <div class="model-card">
+                  <div class="model-card-title">Top Predictors (this profile)</div>
+                  <div class="predictor-list" id="predictorList">
+                    <div style="font-size:12px;color:var(--text-muted);font-style:italic">Expand to load...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="pipeline-step" data-step="2">
+      <div class="step-row">
+        <div class="step-spine">
+          <div class="spine-dot">3</div>
+          <div class="spine-line"></div>
+        </div>
+        <div class="step-card" onclick="toggleStep(this, 2)">
+          <div class="step-header">
+            <span class="step-label">Stage 3 — Persona Construction</span>
+            <span class="step-toggle">+</span>
+          </div>
+          <div class="step-title">The Personas</div>
+          <div class="step-desc">Model outputs cluster into archetypes. We build two opposing personas — one plaintiff-leaning, one defense-leaning — to anchor the jury simulator.</div>
+
+          <div class="step-detail" id="detail-2">
+            <div class="step-detail-inner">
+              <div class="persona-grid">
+                <div class="persona-card plaintiff">
+                  <div class="persona-badge">Plaintiff-Leaning</div>
+                  <div class="persona-name">The Advocate</div>
+                  <div class="persona-traits">
+                    <div class="persona-trait">High empathy, high agreeableness</div>
+                    <div class="persona-trait">Skeptical of corporate responsibility</div>
+                    <div class="persona-trait">Believes system should protect the vulnerable</div>
+                    <div class="persona-trait">Low just-world belief — luck matters</div>
+                    <div class="persona-trait">Opposes damage caps</div>
+                  </div>
+                </div>
+                <div class="persona-card defense">
+                  <div class="persona-badge">Defense-Leaning</div>
+                  <div class="persona-name">The Skeptic</div>
+                  <div class="persona-traits">
+                    <div class="persona-trait">Low empathy, high conscientiousness</div>
+                    <div class="persona-trait">Suspects malingering or exaggeration</div>
+                    <div class="persona-trait">Values personal responsibility</div>
+                    <div class="persona-trait">Strong just-world belief — effort = outcome</div>
+                    <div class="persona-trait">Favors damage caps</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="pipeline-step" data-step="3">
+      <div class="step-row">
+        <div class="step-spine">
+          <div class="spine-dot">4</div>
+          <div class="spine-line" style="background:transparent"></div>
+        </div>
+        <div class="step-card" onclick="toggleStep(this, 3)">
+          <div class="step-header">
+            <span class="step-label">Stage 4 — Voir Dire Strategy</span>
+            <span class="step-toggle">+</span>
+          </div>
+          <div class="step-title">The Questions That Matter</div>
+          <div class="step-desc">Attitudinal predictors become targeted voir dire probes — designed to surface the juror biases that demographics alone would miss.</div>
+
+          <div class="step-detail" id="detail-3">
+            <div class="step-detail-inner">
+              <div class="vd-questions">
+                <div class="vd-q">
+                  <div class="vd-q-label">Probe — Tort Reform Stance</div>
+                  <div class="vd-q-text">"Some people feel that large jury awards help hold wrongdoers accountable. Others feel they drive up costs for everyone. How do you generally see it?"</div>
+                  <div class="vd-q-intent">Intent: surfaces damage cap sympathizers early</div>
+                </div>
+                <div class="vd-q">
+                  <div class="vd-q-label">Probe — Causation Openness</div>
+                  <div class="vd-q-text">"If a doctor says an injury is related to an event, but another doctor disagrees, how would you think through that conflict?"</div>
+                  <div class="vd-q-intent">Intent: reveals skepticism toward medical causation</div>
+                </div>
+                <div class="vd-q">
+                  <div class="vd-q-label">Probe — Empathy / Just World</div>
+                  <div class="vd-q-text">"When someone experiences a serious setback, how much do you think their own choices played a role?"</div>
+                  <div class="vd-q-intent">Intent: uncovers victim-blaming orientation</div>
+                </div>
+                <div class="vd-q">
+                  <div class="vd-q-label">Probe — Invisible Injury Acceptance</div>
+                  <div class="vd-q-text">"How do you evaluate injuries that don't show up on imaging or tests but are described in detail by the person experiencing them?"</div>
+                  <div class="vd-q-intent">Intent: critical for TBI and soft-tissue cases</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /pipeline -->
+
+</div><!-- /main -->
+
+<script>
+  const steps = document.querySelectorAll('.pipeline-step');
+  const navDots = document.getElementById('navDots');
+
+  // Build nav dots
+  steps.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => scrollToStep(i));
+    navDots.appendChild(dot);
+  });
+
+  function scrollToStep(i) {
+    steps[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Animate steps in on load with stagger
+  setTimeout(() => {
+    steps.forEach((step, i) => {
+      setTimeout(() => step.classList.add('visible'), i * 160);
+    });
+  }, 100);
+
+  // Update active nav dot on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const i = +entry.target.dataset.step;
+        document.querySelectorAll('.nav-dot').forEach((d, j) => d.classList.toggle('active', j === i));
+      }
+    });
+  }, { threshold: 0.5 });
+  steps.forEach(s => observer.observe(s));
+
+  // Toggle expand
+  let activeStep = null;
+
+  function toggleStep(card, idx) {
+    const detail = document.getElementById('detail-' + idx);
+    const isOpen = detail.classList.contains('open');
+
+    // close all
+    document.querySelectorAll('.step-detail').forEach(d => d.classList.remove('open'));
+    document.querySelectorAll('.step-card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.step-toggle').forEach(t => t.textContent = '+');
+
+    if (!isOpen) {
+      detail.classList.add('open');
+      card.classList.add('active');
+      card.querySelector('.step-toggle').textContent = '−';
+      if (idx === 1) animateModelBars();
+    }
+  }
+
+  // Animate bars for step 2
+  function animateModelBars() {
+    const predictors = [
+      { name: 'Just World Belief (low)', pct: 88, color: '#0057FF' },
+      { name: 'Empathy (high)', pct: 76, color: '#0057FF' },
+      { name: 'Tort Reform Opposition', pct: 72, color: '#5C2D91' },
+      { name: 'Conscientiousness (low)', pct: 58, color: '#5C2D91' },
+      { name: 'Prior litigation exp.', pct: 41, color: '#0B6B4A' },
+    ];
+
+    const list = document.getElementById('predictorList');
+    list.innerHTML = predictors.map(p => `
+      <div class="predictor-row">
+        <span class="predictor-name">${p.name}</span>
+        <div class="predictor-bar-bg">
+          <div class="predictor-bar-fill" data-pct="${p.pct}" data-color="${p.color}" style="width:0%;background:${p.color}"></div>
+        </div>
+      </div>
+    `).join('');
+
+    setTimeout(() => {
+      document.getElementById('mainBar').style.width = '74%';
+      document.getElementById('mainBarLabel').textContent = '74%';
+      document.getElementById('dmgBar').style.width = '62%';
+      document.getElementById('dmgBarLabel').textContent = 'High';
+
+      list.querySelectorAll('.predictor-bar-fill').forEach(b => {
+        b.style.transition = 'width 0.9s ease';
+        b.style.width = b.dataset.pct + '%';
+      });
+    }, 80);
+  }
+</script>
+</body>
+</html>
