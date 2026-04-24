@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jury Analyst — Closing Analysis · Martinez v. Apex Freight</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #FAFAFC; font-family: 'Noto Sans', sans-serif; color: #231F20; }
+  #root { min-height: 100vh; }
+  * { box-sizing: border-box; }
+  button { font-family: inherit; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #F5F5F5; }
+  ::-webkit-scrollbar-thumb { background: #D0D0E0; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #B0B0C0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState } = React;
+
+// ============================================================================
+// ICONS (inline SVG — no lucide-react dependency)
+// ============================================================================
+const Icon = ({ path, size = 14, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    {path}
+  </svg>
+);
+const icons = {
+  Play: <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />,
+  Pause: <><rect x="6" y="4" width="4" height="16" fill="currentColor" /><rect x="14" y="4" width="4" height="16" fill="currentColor" /></>,
+  ChevronRight: <polyline points="9 18 15 12 9 6" />,
+  ChevronDown: <polyline points="6 9 12 15 18 9" />,
+  FileText: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></>,
+  MessageSquare: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />,
+  TrendingUp: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></>,
+  Sparkles: <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z" fill="currentColor" stroke="none" />,
+  Info: <><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></>,
+  Activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />,
+  MousePointer2: <path d="M4 4l7.5 7.5L9 14l5 5 2-2-5-5 2.5-2.5L4 4z" />,
+  Lightbulb: <><path d="M9 18h6" /><path d="M10 22h4" /><path d="M12 2a7 7 0 0 0-4 12.7c.7.6 1 1.4 1 2.3v1h6v-1c0-.9.3-1.7 1-2.3A7 7 0 0 0 12 2z" /></>,
+  Flag: <><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></>,
+  Mic: <><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></>,
+  GitBranch: <><line x1="6" y1="3" x2="6" y2="15" /><circle cx="18" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="M18 9a9 9 0 0 1-9 9" /></>,
+};
+
+// ============================================================================
+// TOKENS & DATA
+// ============================================================================
+const C = {
+  primary: '#0000B7', secondary: '#0073DF', text: '#231F20',
+  light: '#E6E6F7', mid: '#4D4DCC', gray: '#F5F5F5', dark: '#1A1A2E',
+  border: '#E8E8F0', subtle: '#6B6B7A',
+  good: '#16A34A', goodBg: '#F0FDF4',
+  warn: '#D97706', warnBg: '#FFFBEB',
+  bad: '#DC2626', badBg: '#FEF2F2',
+  purple: '#7C3AED',
+};
+
+const CASE = {
+  name: 'Martinez v. Apex Freight Logistics',
+  type: 'Commercial Motor Vehicle · Wrongful Death',
+  jurisdiction: 'Harris County, TX (State Court)',
+  attorney: 'Rebecca Chen',
+  duration: 1122,
+  wordCount: 2847,
+  avgWPM: 152,
+};
+
+const SEGMENTS = [
+  { id: 'hook', label: 'Opening Hook', start: 0, end: 52, color: '#0000B7' },
+  { id: 'theme', label: 'Theme & Rule', start: 52, end: 186, color: '#0073DF' },
+  { id: 'liability', label: 'Liability Story', start: 186, end: 612, color: '#4D4DCC' },
+  { id: 'rebuttal', label: 'Defense Rebuttal', start: 612, end: 822, color: '#6B5FCC' },
+  { id: 'damages', label: 'Damages Anchor', start: 822, end: 1024, color: '#8B7FCC' },
+  { id: 'ask', label: 'Call to Action', start: 1024, end: 1122, color: '#0000B7' },
+];
+
+const THEME_TIMELINE = [20,45,72,85,82,78,75,80,82,75,68,55,48,42,38,32,28,25,22,20,18,22,28,35,42,48,55,62,68,72,68,65,60,55,48,42,38,35,40,48,55,62,68,72,75,78,82,85,82,78,72,68,65,70,75,80];
+const ATTENTION_TIMELINE = [65,72,82,88,85,80,78,82,85,80,72,65,58,52,48,52,58,62,55,48,42,38,42,48,55,62,68,72,75,78,72,65,58,52,45,38,32,28,35,42,48,55,62,68,72,75,78,72,65,58,52,48,55,62,70,75];
+const VALENCE_TIMELINE = [50,55,60,35,25,15,20,30,35,25,15,10,5,20,30,40,50,55,60,65,70,60,50,40,30,20,25,35,45,55,40,25,15,10,20,30,40,35,25,30,40,50,60,65,70,75,65,55,45,60,75,85,90,85,80,75];
+
+const RHETORICAL = [
+  { type: 'Repetition of theme', count: 11, quality: 'strong', insight: 'Your safety rule phrase "chose profit over safety" appears 11 times. High enough to stick, not high enough to feel rehearsed.' },
+  { type: 'Rule of three', count: 4, quality: 'strong', insight: '"She was a mother, a nurse, a daughter" at 08:15 is your strongest triad.' },
+  { type: 'Contrast pairs', count: 7, quality: 'strong', insight: 'Good binary framing (choice vs accident, safe vs dangerous). Clear moral architecture.' },
+  { type: 'Rhetorical questions', count: 9, quality: 'mixed', insight: '9 is on the high side. Three cluster between 11:00-13:00. At that density, jurors stop feeling asked and start feeling lectured.' },
+  { type: 'Callbacks to opening', count: 2, quality: 'weak', insight: 'Only 2 callbacks. A closing multiplies its power when it closes loops the jury already remembers.' },
+  { type: 'Sensory detail', count: 6, quality: 'strong', insight: 'Six vivid moments. "The sound of the air brakes failing" (08:12) is the most grounded.' },
+  { type: 'Analogies', count: 3, quality: 'mixed', insight: 'The traffic-light analogy works. The "Russian roulette" analogy may draw objection — frames defendant as criminal.' },
+];
+
+const LANGUAGE = {
+  activeVoice: 0.78, avgSentence: 14.2, readability: 7.1,
+  jargon: 0.04, filler: 0.018, strongVerbs: 0.12,
+  passivePassages: [
+    { time: '06:31-07:12', text: 'Duties were owed. Standards were not met.', note: 'This whole section drifts into passive voice. Defendant disappears from their own conduct.' },
+    { time: '14:08-14:22', text: 'Mistakes were made along the way.', note: 'Classic non-apology phrasing. Shifts away from the actor.' },
+  ],
+};
+
+const THEME_TRACKING = {
+  primary: 'Apex chose profit over safety.',
+  stated: 7, reinforced: 11,
+  silent: { start: '07:30', end: '11:45', note: 'Your theme disappears for 4 minutes and 15 seconds during the rebuttal. This is exactly when the defense will try to reframe — and you\'re not there to hold the line.' },
+};
+
+const ARGUMENTS = [
+  { claim: 'Apex pressured drivers to exceed legal driving hours', supported: true, evidence: ['Ex. 31 (internal emails)', 'Perez Dep. 112:4', 'Three prior HOS violations in record'], strength: 'strong' },
+  { claim: 'Driver Rodriguez falsified his logs on the day of the crash', supported: true, evidence: ['ELD data, Ex. 22', 'Dispatcher phone records, Ex. 40'], strength: 'strong' },
+  { claim: 'Apex knew of Rodriguez\'s fatigue risk before this route', supported: 'partial', evidence: ['Safety review, Ex. 18'], strength: 'medium', gap: 'The "knew or should have known" element relies on the safety review alone. Defense will argue the review was preliminary and not actionable.' },
+  { claim: 'Apex\'s conduct caused Maria Martinez\'s death', supported: true, evidence: ['Accident reconstruction, Ex. 11', 'Medical examiner report'], strength: 'strong' },
+  { claim: '$14.2M in damages is reasonable', supported: 'partial', evidence: ['Economic loss calc', 'Pain and suffering narrative'], strength: 'medium', gap: 'The $8.4M non-economic portion is a lump sum without per-diem or unit anchoring. Easy for defense to frame as arbitrary.' },
+  { claim: 'The trucking industry violates federal safety rules generally', supported: false, evidence: [], strength: 'weak', gap: 'At 09:30 you generalize beyond this case. Opens objection and dilutes your specific record.' },
+];
+
+const BEATS = [
+  { time: '02:14', beat: 'Outrage introduced', valence: -35, intensity: 68, delivery: 'Measured — good. Common mistake is leading with full anger.' },
+  { time: '05:03', beat: 'Corporate choice revealed', valence: -40, intensity: 82, delivery: 'Strong. Voice rises, pace slows, eye contact holds.' },
+  { time: '08:12', beat: 'The crash moment', valence: -45, intensity: 88, delivery: 'Your lowest vocal register. 4-second pause after. This is the emotional floor of the closing.' },
+  { time: '11:30', beat: 'Grief — Maria as a person', valence: -20, intensity: 65, delivery: 'Softer delivery. Well-calibrated. Risk: runs slightly long.' },
+  { time: '15:45', beat: 'Jury as enforcers', valence: 25, intensity: 75, delivery: 'Lift in tone. You step out from behind the lectern for the first time.' },
+  { time: '17:50', beat: 'The ask', valence: 35, intensity: 80, delivery: 'Confident but rushed. Dollar figure at 18:02. Closing ends 18:42. 40 seconds for the jury to absorb $14.2M.' },
+];
+
+const FRICTION = [
+  { time: '03:47', type: 'Jargon', severity: 'medium', text: 'You use "hours of service regulations" three times in 90 seconds without explaining what they are.', fix: 'Land the plain-English version first: "federal rules that limit how many hours a truck driver can be behind the wheel."' },
+  { time: '06:31-07:40', type: 'Abstraction', severity: 'medium', text: 'Regulatory discussion with no concrete example. Attention model predicts a 32-point drop.', fix: 'Anchor with a specific near-miss from Apex\'s own record (Ex. 18, p. 4).' },
+  { time: '09:30', type: 'Overreach', severity: 'high', text: 'You generalize to "the trucking industry." Defense will object — "not in evidence."', fix: 'Stay on Apex. Their conduct is damning enough.' },
+  { time: '11:22', type: 'Objection risk', severity: 'high', text: '"Imagine it was your son." Golden Rule violation. Mistrial-adjacent.', fix: 'Keep the weight, lose the invitation to substitute: "This is what happens when a company decides a ten-dollar rule is worth less than a million-dollar risk."' },
+  { time: '13:04', type: 'Under-rebuttal', severity: 'medium', text: 'You spend 41 seconds on the defense\'s strongest argument (individual driver error). They\'ll spend 8 minutes on it.', fix: 'Triple your time here. Walk through the three dispatch emails instead of just referencing them.' },
+  { time: '16:41', type: 'Objection risk', severity: 'medium', text: '"Who\'s next?" implies future harm to jurors.', fix: 'Shift to past pattern: "They made this choice before. The evidence shows this was not the first time."' },
+];
+
+const DELIVERY = {
+  pacing: { score: 8, insight: 'You vary from 118 WPM at key moments to 182 WPM during the liability walkthrough. Skilled range.' },
+  pauses: { score: 7, insight: '31 pauses averaging 1.4 seconds. Three at 3+ seconds (08:16, 11:55, 15:02) — these land.' },
+  volume: { score: 7, insight: 'Good range but you stay in the upper register during rebuttal. Try dropping volume to pull the jury in for your strongest evidence.' },
+  pitch: { score: 8, insight: 'Natural inflection. Emphasis lands on nouns, not filler.' },
+  articulation: { score: 9, insight: 'Exceptionally clear. No dropped consonants even at higher speeds.' },
+  eyeContact: { score: 6, insight: 'On your notes 41% of the time. For a closing, aim below 20%. Highest-leverage delivery change.' },
+  gesture: { score: 7, insight: 'Natural gestures match content. You stay behind the lectern 15 minutes — when you step out at 15:45, engagement spikes.' },
+  proxemics: { score: 6, insight: 'One position change in 18 minutes. Try 3-4 deliberate movements aligned to segment shifts.' },
+  verbalTics: { score: 9, insight: 'Filler rate 1.8%. Occasional "so" at sentence starts, nothing distracting.' },
+};
+
+const THEME_BY_SEG = SEGMENTS.map(seg => {
+  const startIdx = Math.floor(seg.start / 20);
+  const endIdx = Math.max(startIdx + 1, Math.floor(seg.end / 20));
+  const slice = THEME_TIMELINE.slice(startIdx, endIdx);
+  return { ...seg, strength: Math.round(slice.reduce((a, b) => a + b, 0) / Math.max(1, slice.length)) };
+});
+
+const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+
+// ============================================================================
+// COMPONENTS
+// ============================================================================
+function Panel({ title, subtitle, iconKey, children, style = {} }) {
+  return (
+    <div style={{ background: 'white', border: `1px solid ${C.border}`, borderRadius: 10, padding: 18, ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        {iconKey && <div style={{ width: 26, height: 26, background: C.light, color: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6 }}><Icon path={icons[iconKey]} size={14} /></div>}
+        <div>
+          <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 13, color: C.text, letterSpacing: '-0.005em' }}>{title}</div>
+          {subtitle && <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11, color: C.subtle, marginTop: 1 }}>{subtitle}</div>}
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Insight({ children, tone = 'neutral' }) {
+  const colors = {
+    neutral: { bg: C.light, border: C.primary, text: C.text },
+    good: { bg: C.goodBg, border: C.good, text: '#14532D' },
+    warn: { bg: C.warnBg, border: C.warn, text: '#713F12' },
+    bad: { bg: C.badBg, border: C.bad, text: '#7F1D1D' },
+  }[tone];
+  return (
+    <div style={{ background: colors.bg, borderLeft: `3px solid ${colors.border}`, padding: '10px 12px', borderRadius: 4, fontFamily: 'Noto Sans, sans-serif', fontSize: 12.5, color: colors.text, lineHeight: 1.55 }}>
+      {children}
+    </div>
+  );
+}
+
+function Stat({ value, label, sublabel }) {
+  return (
+    <div>
+      <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 22, color: C.primary, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.subtle, marginTop: 4 }}>{label}</div>
+      {sublabel && <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11, color: C.subtle, marginTop: 2 }}>{sublabel}</div>}
+    </div>
+  );
+}
+
+function TimelineViz({ data, segments, duration, label, color = C.primary, height = 50 }) {
+  const gradId = `tf-${label.replace(/\s/g, '')}`;
+  return (
+    <div>
+      {label && <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.subtle, marginBottom: 6 }}>{label}</div>}
+      <div style={{ position: 'relative', height }}>
+        <svg width="100%" height={height} viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0 }}>
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity="0.35" />
+              <stop offset="100%" stopColor={color} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {segments.map((seg, i) => {
+            const x1 = (seg.start / duration) * 100;
+            const x2 = (seg.end / duration) * 100;
+            return <rect key={seg.id} x={x1} y="0" width={x2 - x1} height="100" fill={i % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)'} />;
+          })}
+          <polygon points={`0,100 ${data.map((v, i) => `${(i / (data.length - 1)) * 100},${100 - v}`).join(' ')} 100,100`} fill={`url(#${gradId})`} />
+          <polyline points={data.map((v, i) => `${(i / (data.length - 1)) * 100},${100 - v}`).join(' ')} fill="none" stroke={color} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+        </svg>
+      </div>
+      <div style={{ display: 'flex', marginTop: 4, fontFamily: 'Poppins, sans-serif', fontSize: 9, color: C.subtle }}>
+        {segments.map(seg => {
+          const w = ((seg.end - seg.start) / duration) * 100;
+          return <div key={seg.id} style={{ width: `${w}%`, textAlign: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}>{seg.label.split(' ')[0]}</div>;
+        })}
+      </div>
+    </div>
+  );
+}
+
+function RingMeter({ value, max = 10, label, size = 72, color = C.primary }) {
+  const r = size / 2 - 6;
+  const c = 2 * Math.PI * r;
+  const offset = c * (1 - value / max);
+  return (
+    <div style={{ position: 'relative', width: size, height: size }}>
+      <svg width={size} height={size}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={C.light} strokeWidth="5" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth="5" strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round" transform={`rotate(-90 ${size / 2} ${size / 2})`} />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 18, color: C.text, lineHeight: 1 }}>{value}</div>
+        {label && <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 8, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.subtle, marginTop: 2, textAlign: 'center', maxWidth: 60 }}>{label}</div>}
+      </div>
+    </div>
+  );
+}
+
+function Bar({ value, max = 10, color = C.primary, height = 5, label, labelRight }) {
+  return (
+    <div>
+      {(label || labelRight) && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, fontFamily: 'Poppins, sans-serif', fontSize: 10.5, fontWeight: 500, color: C.text }}>
+          <span>{label}</span>
+          <span style={{ color: C.subtle }}>{labelRight}</span>
+        </div>
+      )}
+      <div style={{ height, background: C.gray, borderRadius: height / 2, overflow: 'hidden' }}>
+        <div style={{ width: `${(value / max) * 100}%`, height: '100%', background: color, borderRadius: height / 2 }} />
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN
+// ============================================================================
+function Dashboard() {
+  const [currentTime, setCurrentTime] = useState(312);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [activeView, setActiveView] = useState('dashboard');
+  const [expandedArg, setExpandedArg] = useState(-1);
+
+  const views = [
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'script', label: 'Script View' },
+    { id: 'compare', label: 'Compare Versions' },
+    { id: 'coach', label: 'Coaching Plan' },
+  ];
+
+  return (
+    <div>
+      {/* Top nav */}
+      <div style={{ background: 'white', borderBottom: `1px solid ${C.border}`, padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <svg width="30" height="30" viewBox="0 0 100 100"><polygon points="25,5 75,5 100,50 75,95 25,95 0,50" fill={C.primary} /><text x="50" y="62" textAnchor="middle" fill="white" fontFamily="Poppins, sans-serif" fontWeight="800" fontSize="34">JA</text></svg>
+            <div>
+              <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 13, color: C.primary, letterSpacing: '0.02em' }}>JURY ANALYST</div>
+              <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 9, color: C.subtle, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Closing Analysis</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 2 }}>
+            {views.map(v => (
+              <button key={v.id} onClick={() => setActiveView(v.id)} style={{ padding: '8px 14px', background: activeView === v.id ? C.light : 'transparent', border: 'none', borderRadius: 6, fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: 12, color: activeView === v.id ? C.primary : C.subtle, cursor: 'pointer' }}>
+                {v.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: 12, color: C.text }}>{CASE.name}</div>
+            <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 10, color: C.subtle }}>{CASE.type} · {CASE.jurisdiction}</div>
+          </div>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.secondary, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 12 }}>RC</div>
+        </div>
+      </div>
+
+      {/* Hero */}
+      <div style={{ background: `linear-gradient(135deg, ${C.primary} 0%, ${C.secondary} 100%)`, padding: '22px 24px', color: 'white', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', right: -40, top: -60, opacity: 0.06 }}>
+          <svg width="280" height="280" viewBox="0 0 100 100"><polygon points="25,5 75,5 100,50 75,95 25,95 0,50" fill="white" /></svg>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr 1fr 1fr 1fr', gap: 24, alignItems: 'center', position: 'relative' }}>
+          <div>
+            <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.7, marginBottom: 6 }}>The Headline</div>
+            <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 19, fontWeight: 700, lineHeight: 1.3 }}>Your theme lands. Your rebuttal doesn't.</div>
+            <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 12.5, opacity: 0.85, marginTop: 6, lineHeight: 1.55 }}>Strong safety-rule framing buys you 11 minutes of jury attention. Then your theme goes silent during the rebuttal and gives the defense room to re-anchor.</div>
+          </div>
+          <div style={{ borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 20 }}>
+            <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.7, marginBottom: 4 }}>Overall</div>
+            <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 30, lineHeight: 1 }}>7.4<span style={{ fontSize: 14, opacity: 0.6 }}>/10</span></div>
+            <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11, opacity: 0.75, marginTop: 2 }}>top 32% in our set</div>
+          </div>
+          <div style={{ borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 20 }}>
+            <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.7, marginBottom: 4 }}>Objection Risks</div>
+            <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 30, lineHeight: 1 }}>3</div>
+            <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11, opacity: 0.75, marginTop: 2 }}>1 high · 2 medium</div>
+          </div>
+          <div style={{ borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 20 }}>
+            <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.7, marginBottom: 4 }}>Silent Stretch</div>
+            <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 30, lineHeight: 1 }}>4:15</div>
+            <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11, opacity: 0.75, marginTop: 2 }}>7:30–11:45</div>
+          </div>
+          <div style={{ borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 20 }}>
+            <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.7, marginBottom: 4 }}>Biggest Win</div>
+            <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 15, lineHeight: 1.25 }}>"Chose profit over safety"</div>
+            <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11, opacity: 0.75, marginTop: 2 }}>11 reinforcements</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: 20, display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16 }}>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 14 }}>
+
+          <div style={{ gridColumn: 'span 12' }}>
+            <Panel title="Closing on a single timeline" subtitle="Every measurement, synchronized. Click to jump to a moment." iconKey="Activity">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <TimelineViz data={THEME_TIMELINE} segments={SEGMENTS} duration={CASE.duration} label="Theme strength" color={C.primary} />
+                <TimelineViz data={ATTENTION_TIMELINE} segments={SEGMENTS} duration={CASE.duration} label="Predicted jury attention" color={C.secondary} />
+                <TimelineViz data={VALENCE_TIMELINE} segments={SEGMENTS} duration={CASE.duration} label="Emotional valence" color={C.purple} />
+              </div>
+              <div style={{ marginTop: 14 }}>
+                <Insight tone="warn">
+                  <strong>What to see here.</strong> Your theme and jury attention climb together through minute 7, then both collapse during the rebuttal. The emotional valence goes flat at exactly the moment the jury should be leaning in. These lines should rise and fall together — right now they diverge where it matters most.
+                </Insight>
+              </div>
+            </Panel>
+          </div>
+
+          <div style={{ gridColumn: 'span 8' }}>
+            <Panel title="Is your theme landing?" subtitle="Where your central message shows up — and where it goes missing" iconKey="Flag">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+                <div style={{ padding: 12, background: C.gray, borderRadius: 6 }}>
+                  <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.subtle, marginBottom: 6 }}>Your Theme</div>
+                  <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: 15, color: C.text, fontStyle: 'italic' }}>"{THEME_TRACKING.primary}"</div>
+                  <div style={{ display: 'flex', gap: 18, marginTop: 12 }}>
+                    <div><span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 18, color: C.primary }}>{THEME_TRACKING.stated}</span><span style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11, color: C.subtle, marginLeft: 5 }}>stated</span></div>
+                    <div><span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 18, color: C.primary }}>{THEME_TRACKING.reinforced}</span><span style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11, color: C.subtle, marginLeft: 5 }}>reinforced</span></div>
+                  </div>
+                </div>
+                <div style={{ padding: 12, background: C.gray, borderRadius: 6 }}>
+                  <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: C.subtle, marginBottom: 8 }}>By segment</div>
+                  {THEME_BY_SEG.map(seg => (
+                    <div key={seg.id} style={{ marginBottom: 6 }}>
+                      <Bar value={seg.strength} max={100} color={seg.color} label={seg.label} labelRight={`${seg.strength}%`} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <Insight tone="warn">
+                <strong>Silent stretch: {THEME_TRACKING.silent.start}–{THEME_TRACKING.silent.end}.</strong> {THEME_TRACKING.silent.note}
+              </Insight>
+            </Panel>
+          </div>
+
+          <div style={{ gridColumn: 'span 4' }}>
+            <Panel title="Where does the jury lose you?" subtitle="Predicted friction points" iconKey="MousePointer2">
+              <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+                {FRICTION.map((fp, i) => (
+                  <div key={i} style={{ padding: '10px 0', borderBottom: i < FRICTION.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 11, color: fp.severity === 'high' ? C.bad : C.warn }}>{fp.time}</span>
+                      <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: 10, color: C.subtle, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{fp.type}</span>
+                    </div>
+                    <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 12, color: C.text, lineHeight: 1.45, marginBottom: 4 }}>{fp.text}</div>
+                    <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11.5, color: C.subtle, lineHeight: 1.45, fontStyle: 'italic' }}>→ {fp.fix}</div>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          </div>
+
+          <div style={{ gridColumn: 'span 7' }}>
+            <Panel title="Does each claim rest on evidence?" subtitle="Every claim in your closing traced to the record" iconKey="GitBranch">
+              {ARGUMENTS.map((arg, i) => {
+                const isExpanded = expandedArg === i;
+                const statusColor = arg.strength === 'strong' ? C.good : arg.strength === 'medium' ? C.warn : C.bad;
+                return (
+                  <div key={i} style={{ borderBottom: i < ARGUMENTS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                    <div onClick={() => setExpandedArg(isExpanded ? -1 : i)} style={{ padding: '10px 0', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: statusColor, marginTop: 6, flexShrink: 0 }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 12.5, color: C.text, fontWeight: 500, lineHeight: 1.45 }}>{arg.claim}</div>
+                        <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 10, color: statusColor, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 3 }}>
+                          {arg.supported === true ? `Supported · ${arg.evidence.length} sources` : arg.supported === 'partial' ? 'Partially supported · gap flagged' : 'Not supported in record'}
+                        </div>
+                      </div>
+                      <Icon path={isExpanded ? icons.ChevronDown : icons.ChevronRight} size={14} color={C.subtle} />
+                    </div>
+                    {isExpanded && (
+                      <div style={{ padding: '0 0 12px 18px' }}>
+                        {arg.evidence.length > 0 && (
+                          <div style={{ marginBottom: 8 }}>
+                            <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 9, fontWeight: 600, color: C.subtle, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Evidence</div>
+                            {arg.evidence.map((e, j) => (
+                              <div key={j} style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11.5, color: C.text, padding: '3px 0' }}>· {e}</div>
+                            ))}
+                          </div>
+                        )}
+                        {arg.gap && <Insight tone="warn"><strong>Gap.</strong> {arg.gap}</Insight>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </Panel>
+          </div>
+
+          <div style={{ gridColumn: 'span 5' }}>
+            <Panel title="Rhetorical technique" subtitle="The craft elements in your delivery" iconKey="Sparkles">
+              {RHETORICAL.map((d, i) => {
+                const color = d.quality === 'strong' ? C.good : d.quality === 'mixed' ? C.warn : C.bad;
+                return (
+                  <div key={i} style={{ padding: '9px 0', borderBottom: i < RHETORICAL.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: 12, color: C.text }}>{d.type}</span>
+                      <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 13, color: color }}>{d.count}×</span>
+                    </div>
+                    <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11.5, color: C.subtle, lineHeight: 1.45 }}>{d.insight}</div>
+                  </div>
+                );
+              })}
+            </Panel>
+          </div>
+
+          <div style={{ gridColumn: 'span 7' }}>
+            <Panel title="Emotional arc" subtitle="How the story moves the jury, moment by moment" iconKey="TrendingUp">
+              <div style={{ position: 'relative', height: 130, marginBottom: 16 }}>
+                <svg width="100%" height="130" viewBox="0 0 600 130" preserveAspectRatio="none">
+                  <line x1="0" y1="65" x2="600" y2="65" stroke={C.border} strokeDasharray="3,3" />
+                  {BEATS.map((b, i) => {
+                    const bTime = parseInt(b.time.split(':')[0]) * 60 + parseInt(b.time.split(':')[1]);
+                    const x = (bTime / CASE.duration) * 600;
+                    const y = 65 - (b.valence * 1.2);
+                    const size = b.intensity / 8;
+                    return (
+                      <g key={i}>
+                        <line x1={x} y1="65" x2={x} y2={y} stroke={b.valence < 0 ? C.bad : C.good} strokeWidth="1.5" opacity="0.4" />
+                        <circle cx={x} cy={y} r={size} fill={b.valence < 0 ? C.bad : C.good} opacity="0.7" />
+                        <text x={x} y={y < 65 ? y - 8 : y + 14} textAnchor="middle" fontFamily="Poppins, sans-serif" fontSize="8" fontWeight="600" fill={C.subtle}>{b.time}</text>
+                      </g>
+                    );
+                  })}
+                  <text x="4" y="14" fontFamily="Poppins, sans-serif" fontSize="8" fontWeight="600" fill={C.subtle} letterSpacing="0.06em">POSITIVE</text>
+                  <text x="4" y="126" fontFamily="Poppins, sans-serif" fontSize="8" fontWeight="600" fill={C.subtle} letterSpacing="0.06em">NEGATIVE</text>
+                </svg>
+              </div>
+              {BEATS.map((b, i) => (
+                <div key={i} style={{ padding: '7px 0', borderBottom: i < BEATS.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', gap: 10 }}>
+                  <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 11, color: C.primary, minWidth: 36 }}>{b.time}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: 12, color: C.text }}>{b.beat}</div>
+                    <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11, color: C.subtle, marginTop: 2 }}>{b.delivery}</div>
+                  </div>
+                </div>
+              ))}
+            </Panel>
+          </div>
+
+          <div style={{ gridColumn: 'span 5' }}>
+            <Panel title="Language & voice" subtitle="Patterns in how you speak" iconKey="MessageSquare">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+                <Stat value={`${Math.round(LANGUAGE.activeVoice * 100)}%`} label="Active voice" sublabel="target: >75%" />
+                <Stat value={LANGUAGE.avgSentence} label="Avg sentence length" sublabel="words — good range" />
+                <Stat value={`Grade ${LANGUAGE.readability}`} label="Readability" sublabel="accessible to jury" />
+                <Stat value={`${(LANGUAGE.jargon * 100).toFixed(1)}%`} label="Legal jargon" sublabel="low — keep low" />
+                <Stat value={`${(LANGUAGE.filler * 100).toFixed(1)}%`} label="Filler words" sublabel="um, uh, like" />
+                <Stat value={`${Math.round(LANGUAGE.strongVerbs * 100)}%`} label="Strong verbs" sublabel="chose, violated, knew" />
+              </div>
+              <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 10, fontWeight: 600, color: C.subtle, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Passive voice drifts</div>
+              {LANGUAGE.passivePassages.map((p, i) => (
+                <div key={i} style={{ padding: 10, background: C.warnBg, borderLeft: `3px solid ${C.warn}`, borderRadius: 4, marginBottom: 6 }}>
+                  <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 11, fontWeight: 700, color: C.warn, marginBottom: 3 }}>{p.time}</div>
+                  <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11.5, color: C.text, fontStyle: 'italic', marginBottom: 4 }}>"{p.text}"</div>
+                  <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11, color: '#713F12', lineHeight: 1.5 }}>{p.note}</div>
+                </div>
+              ))}
+            </Panel>
+          </div>
+
+          <div style={{ gridColumn: 'span 12' }}>
+            <Panel title="Delivery" subtitle="Observable patterns — not guesses about what you were feeling" iconKey="Mic">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+                {Object.entries(DELIVERY).map(([key, m]) => {
+                  const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+                  const color = m.score >= 8 ? C.good : m.score >= 6 ? C.secondary : C.warn;
+                  return (
+                    <div key={key} style={{ padding: 12, background: C.gray, borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                      <RingMeter value={m.score} label={label} size={72} color={color} />
+                      <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 10.5, color: C.subtle, marginTop: 8, lineHeight: 1.4 }}>{m.insight}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Panel>
+          </div>
+
+          <div style={{ gridColumn: 'span 12' }}>
+            <Panel title="How to read these numbers" iconKey="Info">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, fontFamily: 'Noto Sans, sans-serif', fontSize: 12, color: C.text, lineHeight: 1.55 }}>
+                <div>
+                  <strong style={{ fontFamily: 'Poppins, sans-serif', color: C.primary }}>What is measured.</strong> Words, pauses, repetition, voice characteristics, gaze direction, gesture frequency, sentence structure, and claims traced to the evidence in your uploaded case file.
+                </div>
+                <div>
+                  <strong style={{ fontFamily: 'Poppins, sans-serif', color: C.primary }}>What is predicted.</strong> Jury attention is modeled from patterns in closings with known mock-jury outcomes. Objection risk flags phrasing that historically draws sustained objections. These are predictions, not certainties.
+                </div>
+                <div>
+                  <strong style={{ fontFamily: 'Poppins, sans-serif', color: C.primary }}>What is not claimed.</strong> We do not infer your mental state, the jury's verdict, or a witness's truthfulness from video. Those claims are not reliably supported by research. We surface what is observable and let you interpret it.
+                </div>
+              </div>
+            </Panel>
+          </div>
+
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ background: 'white', border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden', position: 'sticky', top: 78 }}>
+            <div style={{ aspectRatio: '16/9', background: `linear-gradient(135deg, ${C.primary} 0%, ${C.secondary} 100%)`, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 30% 40%, rgba(255,255,255,0.1) 0%, transparent 60%)' }} />
+              <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 1 }} onClick={() => setIsPlaying(!isPlaying)}>
+                <Icon path={isPlaying ? icons.Pause : icons.Play} size={26} color="white" />
+              </div>
+              <div style={{ position: 'absolute', bottom: 10, left: 12, color: 'white', fontFamily: 'Poppins, sans-serif', fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.75 }}>Mock Closing · {fmt(CASE.duration)}</div>
+            </div>
+            <div style={{ padding: 10, background: C.dark }}>
+              <div style={{ display: 'flex', height: 5, borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
+                {SEGMENTS.map(seg => {
+                  const width = ((seg.end - seg.start) / CASE.duration) * 100;
+                  const isActive = currentTime >= seg.start && currentTime < seg.end;
+                  return <div key={seg.id} onClick={() => setCurrentTime(seg.start)} style={{ width: `${width}%`, background: seg.color, opacity: isActive ? 1 : 0.5, cursor: 'pointer' }} title={seg.label} />;
+                })}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'Poppins, sans-serif', fontSize: 10, color: 'white' }}>
+                <span>{fmt(currentTime)}</span>
+                <span style={{ opacity: 0.5 }}>{fmt(CASE.duration)}</span>
+              </div>
+            </div>
+            <div style={{ padding: 14 }}>
+              <div style={{ fontFamily: 'Poppins, sans-serif', fontSize: 10, fontWeight: 600, color: C.subtle, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Current Segment</div>
+              <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 15, color: C.text }}>
+                {SEGMENTS.find(s => currentTime >= s.start && currentTime < s.end)?.label || 'Opening Hook'}
+              </div>
+              <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11.5, color: C.subtle, marginTop: 6, lineHeight: 1.5 }}>
+                This segment is where your liability story peaks. Strong rule-evidence connection throughout. Watch for the jargon drift at 03:47.
+              </div>
+            </div>
+          </div>
+
+          <Panel title="Top 3 fixes, ranked" subtitle="By expected lift on jury reception" iconKey="Lightbulb">
+            {[
+              { num: 1, title: 'Rewrite the Golden Rule passage at 11:22', effort: 'Low', impact: 'High', note: 'Objection risk drops to zero. Emotional weight preserved. Single-sentence fix.' },
+              { num: 2, title: 'Triple your rebuttal time on individual driver error', effort: 'Medium', impact: 'High', note: 'Defense will spend 8 minutes here. You spend 41 seconds. This is where verdicts get lost.' },
+              { num: 3, title: 'Anchor the $8.4M non-economic with a per-diem', effort: 'Medium', impact: 'Medium', note: 'Lump-sum numbers feel arbitrary. Per-diem makes the math undeniable.' },
+            ].map((fix, i) => (
+              <div key={i} style={{ padding: '10px 0', borderBottom: i < 2 ? `1px solid ${C.border}` : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <div style={{ width: 22, height: 22, borderRadius: '50%', background: C.primary, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 11, flexShrink: 0 }}>{fix.num}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: 12.5, color: C.text, lineHeight: 1.35 }}>{fix.title}</div>
+                    <div style={{ display: 'flex', gap: 10, marginTop: 4, fontFamily: 'Poppins, sans-serif', fontSize: 10, color: C.subtle }}>
+                      <span>Effort: <strong style={{ color: C.text }}>{fix.effort}</strong></span>
+                      <span>Impact: <strong style={{ color: fix.impact === 'High' ? C.good : C.warn }}>{fix.impact}</strong></span>
+                    </div>
+                    <div style={{ fontFamily: 'Noto Sans, sans-serif', fontSize: 11.5, color: C.subtle, marginTop: 5, lineHeight: 1.5 }}>{fix.note}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </Panel>
+
+          <Panel title="Case context" iconKey="FileText">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontFamily: 'Noto Sans, sans-serif', fontSize: 12 }}>
+              <div><span style={{ color: C.subtle }}>Attorney: </span><strong style={{ color: C.text }}>{CASE.attorney}</strong></div>
+              <div><span style={{ color: C.subtle }}>Jurisdiction: </span><strong style={{ color: C.text }}>{CASE.jurisdiction}</strong></div>
+              <div><span style={{ color: C.subtle }}>Words: </span><strong style={{ color: C.text }}>{CASE.wordCount.toLocaleString()}</strong> <span style={{ color: C.subtle, fontSize: 11 }}>· {CASE.avgWPM} WPM avg</span></div>
+              <div><span style={{ color: C.subtle }}>Exhibits referenced: </span><strong style={{ color: C.text }}>14</strong></div>
+              <div><span style={{ color: C.subtle }}>Depositions cited: </span><strong style={{ color: C.text }}>6</strong></div>
+              <div><span style={{ color: C.subtle }}>Case record coverage: </span><strong style={{ color: C.good }}>92%</strong></div>
+            </div>
+          </Panel>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Dashboard />);
+</script>
+</body>
+</html>
